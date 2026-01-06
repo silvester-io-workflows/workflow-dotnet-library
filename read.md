@@ -2,13 +2,14 @@ Reusable workflow for packing and publishing NuGet packages from a .NET solution
 
 ## Usage
 
-Add a workflow in the consuming repository that triggers when you want to publish and calls this reusable workflow:
+Add a workflow in the consuming repository that triggers when you want to publish and calls this reusable workflow. The reusable workflow always restores and tests; it only packs/publishes when the run is for a tag (e.g., `refs/tags/v1.2.3`):
 
 ```yaml
 name: Publish NuGet Packages
 
 on:
   push:
+    branches: ["main"]
     tags: ["v*"]
   workflow_dispatch: {}
 
@@ -28,6 +29,6 @@ jobs:
 ### Inputs
 - `solution_path` (required): Path to the solution to pack (e.g., `./src/MyLibrary.sln`).
 - `configuration` (optional): Build configuration. Defaults to `Release`.
-- `dotnet_version` (optional): .NET SDK version to install. Defaults to `8.0.x`.
+- `dotnet_version` (optional): .NET SDK version to install. Defaults to `10.0.x`.
 - `package_source` (optional): NuGet source to push to. Defaults to the caller's GitHub Packages feed.
 - `output_dir` (optional): Directory for packed artifacts. Defaults to `./artifacts/packages`.
