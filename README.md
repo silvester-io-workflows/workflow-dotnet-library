@@ -1,0 +1,33 @@
+Reusable workflow for packing and publishing NuGet packages from a .NET solution to GitHub Packages (or another registry).
+
+## Usage
+
+Add a workflow in the consuming repository that triggers when you want to publish and calls this reusable workflow:
+
+```yaml
+name: Publish NuGet Packages
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    uses: silvester-io-workflows/workflow-dotnet-library/.github/workflows/publish-nuget.yaml@main
+    with:
+      solution_path: ./MyLibrary.sln
+      # package_source: https://nuget.pkg.github.com/<owner>/index.json  # optional override
+    secrets: inherit
+```
+
+### Inputs
+- `solution_path` (required): Path to the solution to pack (e.g., `./src/MyLibrary.sln`).
+- `configuration` (optional): Build configuration. Defaults to `Release`.
+- `dotnet_version` (optional): .NET SDK version to install. Defaults to `8.0.x`.
+- `package_source` (optional): NuGet source to push to. Defaults to the caller's GitHub Packages feed.
+- `output_dir` (optional): Directory for packed artifacts. Defaults to `./artifacts/packages`.

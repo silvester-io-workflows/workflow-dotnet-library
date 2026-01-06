@@ -1,0 +1,84 @@
+name: Publish NuGet Packages
+
+on:
+  workflow_call:
+    inputs:
+      solution_path:
+        description: Path to the .sln to pack (e.g., ./src/MyLibrary.sln).
+        required: true
+        type: string
+      configuration:
+        description: Build configuration used for packing.
+        required: false
+        default: Release
+        type: string
+      dotnet_version:
+        description: .NET SDK version to install.
+        required: false
+        default: 10.0.x
+        type: string
+      package_source:
+        description: NuGet source to push to. Defaults to the GitHub Packages feed for the caller.
+        required: false
+        type: string
+      output_dir:
+        description: Directory where packages will be written before publishing.
+        required: false
+        default: ./artifacts/packages
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-${{ github.event.repository.name }}-nuget-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NUGET_SOURCE: ${{ inputs.package_source || format('https://nuget.pkg.github.com/{0}/index.json', github.repository_owner) }}
+  PACK_OUTPUT: ${{ inputs.output_dir || './artifacts/packages' }}
+
+jobs:
+  pack-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet_version || '8.0.x' }}
+
+      - name: Restore
+        run: dotnet restore "${{ inputs.solution_path }}"
+
+      - name: Pack
+        run: dotnet pack "${{ inputs.solution_path }}" --configuration "${{ inputs.configuration }}" --output "${{ env.PACK_OUTPUT }}" /p:ContinuousIntegrationBuild=true
+
+      - name: Publish packages
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          packages=("${PACK_OUTPUT}"/*.nupkg)
+
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No packages found in ${PACK_OUTPUT}"
+            exit 1
+          fi
+
+          for package in "${packages[@]}"; do
+            if [[ "$package" == *.symbols.nupkg ]]; then
+              echo "Skipping symbols package $package"
+              continue
+            fi
+
+            echo "Pushing $package"
+            dotnet nuget push "$package" \
+              --source "${NUGET_SOURCE}" \
+              --api-key "${NUGET_AUTH_TOKEN}" \
+              --skip-duplicate
+          done
