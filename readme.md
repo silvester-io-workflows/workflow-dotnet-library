@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   publish:
-    uses: silvester-io-workflows/workflow-dotnet-library/.github/workflows/publish-nuget.yaml@main
+    uses: silvester-io-workflows/workflow-dotnet-library/.github/workflows/publish-nuget.yaml@v1
     with:
       solution_path: ./MyLibrary.sln
       # package_source: https://nuget.pkg.github.com/<owner>/index.json  # optional override
