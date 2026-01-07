@@ -66,19 +66,12 @@ jobs:
         env:
           NUGET_RESTORE_TOKEN: ${{ secrets.NUGET_RESTORE_TOKEN }}
           NUGET_RESTORE_USERNAME: ${{ secrets.NUGET_RESTORE_USERNAME }}
-          RESTORE_SOURCE: ${{ inputs.restore_source }}
         run: |
-          if [ -z "$NUGET_RESTORE_TOKEN" ]; then
-            echo "NUGET_RESTORE_TOKEN not provided; skipping GitHub Packages restore auth"
-            exit 0
-          fi
-
-          dotnet nuget remove source silvester-io-libraries || true
-          dotnet nuget add source "$RESTORE_SOURCE" \
-            --name "silvester-io-libraries" \
+          dotnet nuget update source "silvester-io-libraries" \
             --username "$NUGET_RESTORE_USERNAME" \
             --password "$NUGET_RESTORE_TOKEN" \
-            --store-password-in-clear-text
+            --store-password-in-clear-text \
+            --configfile ./nuget.config
 
       - name: Restore
         run: dotnet restore "${{ inputs.solution_path }}" --configfile ./nuget.config
