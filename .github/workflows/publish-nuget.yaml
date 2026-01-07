@@ -26,6 +26,16 @@ on:
         required: false
         default: ./artifacts/packages
         type: string
+      restore_source:
+        description: NuGet source to restore from for internal packages. Defaults to silvester-io-libraries.
+        required: false
+        default: https://nuget.pkg.github.com/silvester-io-libraries/index.json
+        type: string
+    secrets:
+      NUGET_RESTORE_TOKEN:
+        required: false
+      NUGET_RESTORE_USERNAME:
+        required: false
 
 permissions:
   contents: read
@@ -52,8 +62,18 @@ jobs:
         with:
           dotnet-version: ${{ inputs.dotnet_version || '10.0.x' }}
 
+      - name: Configure GitHub Packages for restore
+        if: ${{ secrets.NUGET_RESTORE_TOKEN != '' }}
+        run: |
+          dotnet nuget remove source silvester-io-libraries || true
+          dotnet nuget add source "${{ inputs.restore_source }}" \
+            --name "silvester-io-libraries" \
+            --username "${{ secrets.NUGET_RESTORE_USERNAME }}" \
+            --password "${{ secrets.NUGET_RESTORE_TOKEN }}" \
+            --store-password-in-clear-text
+
       - name: Restore
-        run: dotnet restore "${{ inputs.solution_path }}"
+        run: dotnet restore "${{ inputs.solution_path }}" --configfile ./nuget.config
 
       - name: Test
         run: dotnet test "${{ inputs.solution_path }}" --configuration "${{ inputs.configuration }}"
