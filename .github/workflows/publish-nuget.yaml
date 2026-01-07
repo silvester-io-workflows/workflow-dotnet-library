@@ -63,13 +63,16 @@ jobs:
           dotnet-version: ${{ inputs.dotnet_version || '10.0.x' }}
 
       - name: Configure GitHub Packages for restore
-        if: ${{ secrets.NUGET_RESTORE_TOKEN != '' }}
+        env:
+          NUGET_RESTORE_TOKEN: ${{ secrets.NUGET_RESTORE_TOKEN }}
+          NUGET_RESTORE_USERNAME: ${{ secrets.NUGET_RESTORE_USERNAME }}
+        if: ${{ env.NUGET_RESTORE_TOKEN != '' }}
         run: |
           dotnet nuget remove source silvester-io-libraries || true
-          dotnet nuget add source "${{ inputs.restore_source }}" \
+          dotnet nuget add source "https://nuget.pkg.github.com/silvester-io-libraries/index.json" \
             --name "silvester-io-libraries" \
-            --username "${{ secrets.NUGET_RESTORE_USERNAME }}" \
-            --password "${{ secrets.NUGET_RESTORE_TOKEN }}" \
+            --username "$NUGET_RESTORE_USERNAME" \
+            --password "$NUGET_RESTORE_TOKEN" \
             --store-password-in-clear-text
 
       - name: Restore
