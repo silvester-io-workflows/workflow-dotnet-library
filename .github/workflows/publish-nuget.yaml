@@ -66,10 +66,15 @@ jobs:
         env:
           NUGET_RESTORE_TOKEN: ${{ secrets.NUGET_RESTORE_TOKEN }}
           NUGET_RESTORE_USERNAME: ${{ secrets.NUGET_RESTORE_USERNAME }}
-        if: ${{ env.NUGET_RESTORE_TOKEN != '' }}
+          RESTORE_SOURCE: ${{ inputs.restore_source }}
         run: |
+          if [ -z "$NUGET_RESTORE_TOKEN" ]; then
+            echo "NUGET_RESTORE_TOKEN not provided; skipping GitHub Packages restore auth"
+            exit 0
+          fi
+
           dotnet nuget remove source silvester-io-libraries || true
-          dotnet nuget add source "https://nuget.pkg.github.com/silvester-io-libraries/index.json" \
+          dotnet nuget add source "$RESTORE_SOURCE" \
             --name "silvester-io-libraries" \
             --username "$NUGET_RESTORE_USERNAME" \
             --password "$NUGET_RESTORE_TOKEN" \
