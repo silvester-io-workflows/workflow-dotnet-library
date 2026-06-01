@@ -31,6 +31,11 @@ on:
         required: false
         default: https://nuget.pkg.github.com/silvester-io-libraries/index.json
         type: string
+      runsettings_path:
+        description: Optional path to the .runsettings file used during tests.
+        required: false
+        default: ""
+        type: string
     secrets:
       NUGET_RESTORE_TOKEN:
         required: false
@@ -77,7 +82,12 @@ jobs:
         run: dotnet restore "${{ inputs.solution_path }}" --configfile ./nuget.config
 
       - name: Test
+        if: inputs.runsettings_path == ''
         run: dotnet test "${{ inputs.solution_path }}" --configuration "${{ inputs.configuration }}"
+
+      - name: Test with runsettings
+        if: inputs.runsettings_path != ''
+        run: dotnet test "${{ inputs.solution_path }}" --configuration "${{ inputs.configuration }}" --settings "${{ inputs.runsettings_path }}"
 
       - name: Pack
         if: startsWith(github.ref, 'refs/tags/')

@@ -23,6 +23,7 @@ jobs:
     with:
       solution_path: ./MyLibrary.sln
       # package_source: https://nuget.pkg.github.com/<owner>/index.json  # optional override
+      # runsettings_path: ./tests.ci.runsettings  # optional test settings
     secrets: inherit
 ```
 
@@ -32,3 +33,5 @@ jobs:
 - `dotnet_version` (optional): .NET SDK version to install. Defaults to `10.0.x`.
 - `package_source` (optional): NuGet source to push to. Defaults to the caller's GitHub Packages feed.
 - `output_dir` (optional): Directory for packed artifacts. Defaults to `./artifacts/packages`.
+- `restore_source` (optional): NuGet source to restore from for internal packages. Defaults to `https://nuget.pkg.github.com/silvester-io-libraries/index.json`.
+- `runsettings_path` (optional): Path to a `.runsettings` file used during tests.
